@@ -14,9 +14,10 @@ class Mensagem {
     private $para = null;
     private $assunto = null;
     private $mensagem = null;
+    public $status = array('codigo_status'=> null, 'descricao_status'=> '');
 
     public function __get($atributo) {
-        return $this->$atrubuto;
+        return $this->$atributo;
     }
 
     public function __set($atributo, $valor) {
@@ -37,29 +38,27 @@ $mensagem->__set('para', $_POST['para']);
 $mensagem->__set('assunto', $_POST['assunto']);
 $mensagem->__set('mensagem', $_POST['mensagem']);
 
-// print_r($mensagem);
-
 if(!$mensagem->mensagemValida()) {
     echo 'A mensagem não é válida';
-    die();
+    header('Location: index.php'); //melhorar o controle de fluxo
 }
 
 $mail = new PHPMailer(true);
 
 try {
     //Server settings
-    $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+    $mail->SMTPDebug = false;                      //Enable verbose debug output
     $mail->isSMTP();                                            //Send using SMTP
-    $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+    $mail->Host       = 'smtp do seu provedor de email';                     //Set the SMTP server to send through
     $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-    $mail->Username   = 'gui.amarall123@gmail.com';                     //SMTP username
-    $mail->Password   = '';                               //SMTP password
+    $mail->Username   = 'seu email aqui';                     //SMTP username
+    $mail->Password   = 'sua senha aqui';                               //SMTP password
     $mail->SMTPSecure = 'tls';            //Enable implicit TLS encryption
-    $mail->Port       = ;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+    $mail->Port       = porta de conexao;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
     //Recipients
-    $mail->setFrom('gui.amarall123@gmail.com', 'eu remetente');
-    $mail->addAddress('gui.amarall123@gmail.com', 'gui destinatario');     //Add a recipient
+    $mail->setFrom('gui.amarall123@gmail.com', 'gui');
+    $mail->addAddress($mensagem->__get('para'));     //Add a recipient
     // $mail->addReplyTo('info@example.com', 'Information');
     // $mail->addCC('cc@example.com');
     // $mail->addBCC('bcc@example.com');
@@ -70,12 +69,57 @@ try {
 
     //Content
     $mail->isHTML(true);                                  //Set email format to HTML
-    $mail->Subject = 'Oi. Eu sou o assunto';
-    $mail->Body    = 'Oi. eu sou o conteudo do <b>e-mail</b>.';
-    $mail->AltBody = 'Oi. eu sou o conteudo do e-mail';
+    $mail->Subject = $mensagem->__get('assunto');
+    $mail->Body    = $mensagem->__get('mensagem');
+    $mail->AltBody = 'É necessário utilizar um client que suporte HTML para utilizar este recurso';
 
     $mail->send();
-    echo 'Não foi possivel enviar este e-mail! Por favor tente novamente mais tarde';
+
+    $mensagem->status['codigo_status'] = 1;
+    $mensagem->status['descricao_status'] = 'E-mail enviado com sucesso';
+
 } catch (Exception $e) {
-    echo "Detalhes do erro: {$mail->ErrorInfo}";
+
+    $mensagem->status['codigo_status'] = 2;
+    $mensagem->status['descricao_status'] = 'Não foi possível enviar esta mensagem, por favor tente mais tarde! Detalhes do erro: '.$mail->ErrorInfo;
 }
+?>
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+    	<title>App Mail Send</title>
+    	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    </head>
+    <body>
+        <div class="container">
+            <div class="py-3 text-center">
+				<img class="d-block mx-auto mb-2" src="logo.png" alt="" width="72" height="72">
+				<h2>Send Mail</h2>
+				<p class="lead">Seu app de envio de e-mails particular!</p>
+		    </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <? if($mensagem->status['codigo_status'] == 1) { ?>
+
+                        <div class="cantainer">
+                            <h1 class="display-4 text-success">Sucesso</h1>
+                            <p><?= $mensagem->status['descricao_status'] ?></p>
+                            <a href="index.php" class="btn btn-success btn-lg mt-5 text-white">Voltar</a>
+                        </div>
+                    <? } ?>
+
+                    <? if($mensagem->status['codigo_status'] == 2) { ?>
+                        <div class="cantainer">
+                            <h1 class="display-4 text-danger">Ops!</h1>
+                            <p><?= $mensagem->status['descricao_status'] ?></p>
+                            <a href="index.php" class="btn btn-success btn-lg mt-5 text-white">Voltar</a>
+                        </div>
+
+                    <? } ?>
+                </div>
+            </div>
+        </div>
+        
+    </body>
+</html>
