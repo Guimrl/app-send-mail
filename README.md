@@ -30,4 +30,4 @@ line 49: $mail->Password = 'add your app password';
 line 54: $mail->setFrom('your email', 'custom address');
 ``` 
 
-
+## you should move "xampp app_send_mail" folder to xampp directory outside htdocs and rename the file to "app_send_mail".
